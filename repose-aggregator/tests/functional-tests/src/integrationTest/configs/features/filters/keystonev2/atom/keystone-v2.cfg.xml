@@ -6,10 +6,8 @@
             <token>60000</token>
             <group>60000</group>
         </timeouts>
-        <atom-feed id="non-authenticating-feed" />
+        <atom-feed id="authenticating-feed" />
     </cache>
 
-    <identity-service username="admin_username"
-                      password="admin_password"
-                      uri="http://localhost:${identityPort}"/>
+    <identity-service uri="http://localhost:${identityPort}"/>
 </keystone-v2>

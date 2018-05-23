@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream
 import java.net.URI
 import java.util
 
+import com.typesafe.scalalogging.slf4j.StrictLogging
 import org.apache.abdera.Abdera
 import org.apache.abdera.model.{Entry, Feed}
 import org.apache.http.client.HttpClient
@@ -41,7 +42,7 @@ import scala.language.postfixOps
 /**
   * A container object for the build function.
   */
-object AtomEntryStreamBuilder {
+object AtomEntryStreamBuilder extends StrictLogging {
 
   private val parser = Abdera.getInstance().getParser
 
@@ -95,6 +96,7 @@ object AtomEntryStreamBuilder {
           values.foreach(value => httpGet.addHeader(key, value))
         }
 
+        logger.trace(s"Reading feed at {}", feedReadRequest.getURI)
         val httpResponse = httpClient.execute(httpGet)
         try {
           val statusCode = httpResponse.getStatusLine.getStatusCode
@@ -105,6 +107,7 @@ object AtomEntryStreamBuilder {
               .getOrElse(new ByteArrayInputStream(Array.empty[Byte]))
             val feed = parser.parse[Feed](content).getRoot
 
+            feed.getEntries.size()
             feed.getLinks.find(link => link.getRel.equals("next")) match {
               case Some(nextPageLink) =>
                 feed.getEntries.toStream #::: buildR(nextPageLink.getResolvedHref.toURI, httpClient, context, authenticator, authenticationTimeout)
@@ -123,6 +126,7 @@ object AtomEntryStreamBuilder {
             throw ServerResponseException(s"Could not handle Atom service response code: $statusCode")
           }
         } finally {
+          // todo: this is what breaks us! this closes the stream before the Abdera parser can parse it (because Abdera is lazy about things like that)
           EntityUtils.consume(httpResponse.getEntity)
         }
       case None =>

@@ -60,6 +60,7 @@ class AtomFeedServiceTest extends ReposeValveTest {
         fakeIdentityV2Service = new MockIdentityV2Service(properties.identityPort, properties.targetPort)
         deproxy.addEndpoint(properties.identityPort, 'identity service', null, fakeIdentityV2Service.handler)
 
+        repose.enableDebug()
         repose.waitForNon500FromUrl(reposeEndpoint)
     }
 
@@ -131,136 +132,143 @@ class AtomFeedServiceTest extends ReposeValveTest {
 //        moreLogLines.collect { (it =~ /\s*<atom:id>urn:uuid:(\d+)<\/atom:id>.*/)[0][1] } == moreIds
 //    }
 
-    def "when new events are posted to the feed, they are all processed by the filter"() {
-        given:
-        def params = fakeAtomFeed.defaultParams + fakeAtomFeed.DEFAULT_FEED_PARAMS
-        def initialFeedPg1 =
-            fakeAtomFeed.buildXmlToString { MarkupBuilder xmlBuilder ->
-                xmlBuilder.mkp.xmlDeclaration(version: "1.0", encoding: "UTF-8")
+//    def "when new events are posted to the feed, they are all processed by the filter"() {
+//        given:
+//        def params = fakeAtomFeed.defaultParams + fakeAtomFeed.DEFAULT_FEED_PARAMS
+//        def initialFeedPg1 =
+//            fakeAtomFeed.buildXmlToString { MarkupBuilder xmlBuilder ->
+//                xmlBuilder.mkp.xmlDeclaration(version: "1.0", encoding: "UTF-8")
+//
+//                xmlBuilder.'feed'(xmlns: "http://www.w3.org/2005/Atom") {
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "current")
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "self")
+//                    'id'(params.id)
+//                    'title'(type: "text", "feed")
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/?marker=urn:uuid:1&amp;limit=1&amp;search=&amp;direction=backward", rel: "next")
+//                    'updated'(params.time)
+//                    fakeAtomFeed.atomEntryForUserUpdate(id: "urn:uuid:2")(xmlBuilder)
+//                }
+//
+//                xmlBuilder
+//            }
+//
+//        def initialFeedPg2 =
+//            fakeAtomFeed.buildXmlToString { MarkupBuilder xmlBuilder ->
+//                xmlBuilder.mkp.xmlDeclaration(version: "1.0", encoding: "UTF-8")
+//
+//                xmlBuilder.'feed'(xmlns: "http://www.w3.org/2005/Atom") {
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "current")
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "self")
+//                    'id'(params.id)
+//                    'title'(type: "text", "feed")
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/?marker=last&amp;limit=1&amp;search=&amp;direction=backward", rel: "last")
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/?marker=urn:uuid:2&amp;limit=1&amp;search=&amp;direction=forward", rel: "previous")
+//                    'updated'(params.time)
+//                    fakeAtomFeed.atomEntryForUserUpdate(id: "urn:uuid:1")(xmlBuilder)
+//                }
+//
+//                xmlBuilder
+//            }
+//
+//        def updatedFeedPg1 =
+//            fakeAtomFeed.buildXmlToString { MarkupBuilder xmlBuilder ->
+//                xmlBuilder.mkp.xmlDeclaration(version: "1.0", encoding: "UTF-8")
+//
+//                xmlBuilder.'feed'(xmlns: "http://www.w3.org/2005/Atom") {
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "current")
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "self")
+//                    'id'(params.id)
+//                    'title'(type: "text", "feed")
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/?marker=urn:uuid:2&amp;limit=1&amp;search=&amp;direction=backward", rel: "next")
+//                    'updated'(params.time)
+//                    fakeAtomFeed.atomEntryForUserUpdate(id: "urn:uuid:3")(xmlBuilder)
+//                }
+//
+//                xmlBuilder
+//            }
+//
+//        def updatedFeedPg2 =
+//            fakeAtomFeed.buildXmlToString { MarkupBuilder xmlBuilder ->
+//                xmlBuilder.mkp.xmlDeclaration(version: "1.0", encoding: "UTF-8")
+//
+//                xmlBuilder.'feed'(xmlns: "http://www.w3.org/2005/Atom") {
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "current")
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "self")
+//                    'id'(params.id)
+//                    'title'(type: "text", "feed")
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/?marker=urn:uuid:1&amp;limit=1&amp;search=&amp;direction=backward", rel: "next")
+//                    'updated'(params.time)
+//                    fakeAtomFeed.atomEntryForUserUpdate(id: "urn:uuid:2")(xmlBuilder)
+//                }
+//
+//                xmlBuilder
+//            }
+//
+//        def updatedFeedPg3 =
+//            fakeAtomFeed.buildXmlToString { MarkupBuilder xmlBuilder ->
+//                xmlBuilder.mkp.xmlDeclaration(version: "1.0", encoding: "UTF-8")
+//
+//                xmlBuilder.'feed'(xmlns: "http://www.w3.org/2005/Atom") {
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "current")
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "self")
+//                    'id'(params.id)
+//                    'title'(type: "text", "feed")
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/?marker=last&amp;limit=1&amp;search=&amp;direction=backward", rel: "last")
+//                    'link'(href: "http://localhost:${params.atomPort}/feed/?marker=urn:uuid:2&amp;limit=1&amp;search=&amp;direction=forward", rel: "previous")
+//                    'updated'(params.time)
+//                    fakeAtomFeed.atomEntryForUserUpdate(id: "urn:uuid:1")(xmlBuilder)
+//                }
+//
+//                xmlBuilder
+//            }
+//
+//        when:
+//        atomEndpoint.defaultHandler = { Request request ->
+//            if(request.path.contains("marker=urn:uuid:1")) {
+//                new Response(SC_OK,
+//                    null,
+//                    fakeAtomFeed.headers,
+//                    initialFeedPg2)
+//            } else {
+//                new Response(SC_OK,
+//                    null,
+//                    fakeAtomFeed.headers,
+//                    initialFeedPg1)
+//            }
+//        }
+//        reposeLogSearch.awaitByString("</atom:entry>", 2, 11, TimeUnit.SECONDS)
+//
+//        and:
+//        atomEndpoint.defaultHandler = { Request request ->
+//            if(request.path.contains("marker=urn:uuid:1")) {
+//                new Response(SC_OK,
+//                    null,
+//                    fakeAtomFeed.headers,
+//                    updatedFeedPg3)
+//            } else if(request.path.contains("marker=urn:uuid:2")) {
+//                new Response(SC_OK,
+//                    null,
+//                    fakeAtomFeed.headers,
+//                    updatedFeedPg2)
+//            } else {
+//                new Response(SC_OK,
+//                    null,
+//                    fakeAtomFeed.headers,
+//                    updatedFeedPg1)
+//            }
+//        }
+//        reposeLogSearch.awaitByString("</atom:entry>", 3, 11, TimeUnit.SECONDS)
+//
+//        then:
+//        def logLines = reposeLogSearch.searchByString(">.*\\d+</atom:id>")
+//        logLines.size() == 3
+//        logLines.collect { (it =~ /\s*>urn:uuid:(\d+)<\/atom:id>.*/)[0][1] } == [2, 1, 3]
+//    }
 
-                xmlBuilder.'feed'(xmlns: "http://www.w3.org/2005/Atom") {
-                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "current")
-                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "self")
-                    'id'(params.id)
-                    'title'(type: "text", "feed")
-                    'link'(href: "http://localhost:${params.atomPort}/feed/?marker=urn:uuid:1&amp;limit=1&amp;search=&amp;direction=backward", rel: "next")
-                    'updated'(params.time)
-                    fakeAtomFeed.atomEntryForUserUpdate(id: "urn:uuid:2")(xmlBuilder)
-                }
-
-                xmlBuilder
-            }
-
-        def initialFeedPg2 =
-            fakeAtomFeed.buildXmlToString { MarkupBuilder xmlBuilder ->
-                xmlBuilder.mkp.xmlDeclaration(version: "1.0", encoding: "UTF-8")
-
-                xmlBuilder.'feed'(xmlns: "http://www.w3.org/2005/Atom") {
-                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "current")
-                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "self")
-                    'id'(params.id)
-                    'title'(type: "text", "feed")
-                    'link'(href: "http://localhost:${params.atomPort}/feed/?marker=last&amp;limit=1&amp;search=&amp;direction=backward", rel: "last")
-                    'link'(href: "http://localhost:${params.atomPort}/feed/?marker=urn:uuid:2&amp;limit=1&amp;search=&amp;direction=forward", rel: "previous")
-                    'updated'(params.time)
-                    fakeAtomFeed.atomEntryForUserUpdate(id: "urn:uuid:1")(xmlBuilder)
-                }
-
-                xmlBuilder
-            }
-
-        def updatedFeedPg1 =
-            fakeAtomFeed.buildXmlToString { MarkupBuilder xmlBuilder ->
-                xmlBuilder.mkp.xmlDeclaration(version: "1.0", encoding: "UTF-8")
-
-                xmlBuilder.'feed'(xmlns: "http://www.w3.org/2005/Atom") {
-                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "current")
-                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "self")
-                    'id'(params.id)
-                    'title'(type: "text", "feed")
-                    'link'(href: "http://localhost:${params.atomPort}/feed/?marker=urn:uuid:2&amp;limit=1&amp;search=&amp;direction=backward", rel: "next")
-                    'updated'(params.time)
-                    fakeAtomFeed.atomEntryForUserUpdate(id: "urn:uuid:3")(xmlBuilder)
-                }
-
-                xmlBuilder
-            }
-
-        def updatedFeedPg2 =
-            fakeAtomFeed.buildXmlToString { MarkupBuilder xmlBuilder ->
-                xmlBuilder.mkp.xmlDeclaration(version: "1.0", encoding: "UTF-8")
-
-                xmlBuilder.'feed'(xmlns: "http://www.w3.org/2005/Atom") {
-                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "current")
-                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "self")
-                    'id'(params.id)
-                    'title'(type: "text", "feed")
-                    'link'(href: "http://localhost:${params.atomPort}/feed/?marker=urn:uuid:1&amp;limit=1&amp;search=&amp;direction=backward", rel: "next")
-                    'updated'(params.time)
-                    fakeAtomFeed.atomEntryForUserUpdate(id: "urn:uuid:2")(xmlBuilder)
-                }
-
-                xmlBuilder
-            }
-
-        def updatedFeedPg3 =
-            fakeAtomFeed.buildXmlToString { MarkupBuilder xmlBuilder ->
-                xmlBuilder.mkp.xmlDeclaration(version: "1.0", encoding: "UTF-8")
-
-                xmlBuilder.'feed'(xmlns: "http://www.w3.org/2005/Atom") {
-                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "current")
-                    'link'(href: "http://localhost:${params.atomPort}/feed/", rel: "self")
-                    'id'(params.id)
-                    'title'(type: "text", "feed")
-                    'link'(href: "http://localhost:${params.atomPort}/feed/?marker=last&amp;limit=1&amp;search=&amp;direction=backward", rel: "last")
-                    'link'(href: "http://localhost:${params.atomPort}/feed/?marker=urn:uuid:2&amp;limit=1&amp;search=&amp;direction=forward", rel: "previous")
-                    'updated'(params.time)
-                    fakeAtomFeed.atomEntryForUserUpdate(id: "urn:uuid:1")(xmlBuilder)
-                }
-
-                xmlBuilder
-            }
-
-        when:
-        atomEndpoint.defaultHandler = { Request request ->
-            if(request.path.contains("marker=urn:uuid:1")) {
-                new Response(SC_OK,
-                    null,
-                    fakeAtomFeed.headers,
-                    initialFeedPg2)
-            } else {
-                new Response(SC_OK,
-                    null,
-                    fakeAtomFeed.headers,
-                    initialFeedPg1)
-            }
+    def "loop while watching a live feed"() {
+        expect:
+        while (true) {
+            sleep(10000)
         }
-        reposeLogSearch.awaitByString("</atom:entry>", 2, 11, TimeUnit.SECONDS)
-
-        and:
-        atomEndpoint.defaultHandler = { Request request ->
-            if(request.path.contains("marker=urn:uuid:1")) {
-                new Response(SC_OK,
-                    null,
-                    fakeAtomFeed.headers,
-                    updatedFeedPg3)
-            } else if(request.path.contains("marker=urn:uuid:2")) {
-                new Response(SC_OK,
-                    null,
-                    fakeAtomFeed.headers,
-                    updatedFeedPg2)
-            } else {
-                new Response(SC_OK,
-                    null,
-                    fakeAtomFeed.headers,
-                    updatedFeedPg1)
-            }
-        }
-        reposeLogSearch.awaitByString("</atom:entry>", 3, 11, TimeUnit.SECONDS)
-
-        then:
-        def logLines = reposeLogSearch.searchByString(">.*\\d+</atom:id>")
-        logLines.size() == 3
-        logLines.collect { (it =~ /\s*>urn:uuid:(\d+)<\/atom:id>.*/)[0][1] } == [2, 1, 3]
     }
 }

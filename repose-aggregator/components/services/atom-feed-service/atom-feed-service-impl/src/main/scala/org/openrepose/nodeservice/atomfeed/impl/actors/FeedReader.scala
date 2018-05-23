@@ -112,6 +112,7 @@ class FeedReader(feedURIString: String,
 
   override def receive: Receive = {
     case ReadFeed =>
+      logger.trace("Received ReadFeed message")
       val httpClientContainer = httpClientService.getClient(connectionPoolId)
       val requestId = java.util.UUID.randomUUID().toString
       MDC.put(TracingKey.TRACING_KEY, requestId)
