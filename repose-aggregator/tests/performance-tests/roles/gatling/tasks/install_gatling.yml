@@ -54,3 +54,5 @@
     dest: /root/gatling/current/conf/gatling.conf
     mode: 0644
     backup: yes
+
+# fixme: install common library to the `GATLING_HOME/lib` directory (incl. common test code)
