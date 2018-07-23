@@ -345,6 +345,16 @@ subprojects {
     }
 
     dependencyCheck {
+        scanConfigurations = [
+            'compile',
+            'implementation',
+            'compileOnly',
+            'compileClasspath',
+            'runtime',
+            'runtimeOnly',
+            'runtimeClasspath',
+            'default',
+        ]
         analyzers {
             assemblyEnabled = false
         }
