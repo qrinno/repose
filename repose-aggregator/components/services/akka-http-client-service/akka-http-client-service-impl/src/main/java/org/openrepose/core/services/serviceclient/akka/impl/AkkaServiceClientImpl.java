@@ -68,6 +68,11 @@ public class AkkaServiceClientImpl implements AkkaServiceClient, UpdateListener<
     private boolean initialized = false;
     private int numberOfActors;
     private int socketTimeout;
+    // todo: why use an Akka actor system here? why not use raw Futures and Await.result?
+    // todo: an actor system limits calls to the service client (and thus, httpclient) to the size of the connection pool. This doesn't really matter since we block anyway, and timeout regardless of if we are waiting for a connection from the connection pool or waiting for an actor to pick up the request
+    // todo: actor scaling is not dynamic
+    // todo: we only have one actor defined
+    // todo: actor systems are fairly complex, with less obvious behavior (especially for non-experts)
     private ActorSystem actorSystem;
     private ActorRef tokenActorRef;
 
@@ -124,8 +129,11 @@ public class AkkaServiceClientImpl implements AkkaServiceClient, UpdateListener<
     public ServiceClientResponse post(String hashKey, String uri, Map<String, String> headers, String payload, MediaType contentMediaType, boolean checkCache) throws AkkaServiceClientException {
         AuthPostRequest authPostRequest = new AuthPostRequest(hashKey, uri, headers, payload, contentMediaType);
         try {
+            // fixme: timeout on ask and Await.result is redundant
             Timeout timeout = new Timeout(socketTimeout + CONNECTION_TIMEOUT_BUFFER_MILLIS, TimeUnit.MILLISECONDS);
+            // this will fail the Future after timeout
             Future<ServiceClientResponse> future = getFuture(authPostRequest, timeout, checkCache);
+            // this will throw an exception after timeout
             return Await.result(future, timeout.duration());
         } catch (Exception e) {
             LOG.error("Error acquiring value from akka (POST) or the cache. Reason: {}", e.getLocalizedMessage());

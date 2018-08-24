@@ -66,6 +66,7 @@ public class ServiceClient {
             clientResponse = httpClientService.getClient(connectionPoolId);
             return clientResponse.getHttpClient();
         } finally {
+            // fixme: releasing the client here is inappropriate since the client has not yet been used
             if (clientResponse != null) {
                 httpClientService.releaseClient(clientResponse);
             }

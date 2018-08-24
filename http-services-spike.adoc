@@ -1,0 +1,45 @@
+Http Client Service and Akka Http Client Service
+
+* What are the responsibilities of the service? Check current usage (of both the connection pool and akka service).
+** Client configuration
+** Pooling (re-using connections, done via configuration)
+** Client decommissioning (so users can finish using clients after configuration is updated, and connections aren't abruptly closed)
+** Caching
+** Tracing
+** URI redaction
+* We want to combine the Http Client and Akka Client services.
+* Caching (how long, what, how to bypass). Does Apache HttpClient provide this functionality? Only as Http caching (i.e., using `Cache-Control`, etc).
+* Configuration (with new Apache HttpClient configuration design)
+** Apache’s configuration of HttpClients is using the Builder API
+** The current XML configuration is a reasonable approach since we must know exactly how to map from Repose configuration to HttpClient configuration
+* Generality
+** Should we define our own HTTP model (ServiceClientResponse), or use the Apache HttpClient model? Our own model would allow us to switch out the backend, but the Apache model would simplify the code and provide us with whatever development Apache does.
+** Adrian likes using our own model. It can be fairly simple (i.e., not as complex as the HttpClient models).
+** I like using the HttpClient models. They already exist, so we don't have to write them, and HttpClient is a common library that many people already know how to use (as opposed to having to learn to use whatever API we define). While it may be more complex, that complexity provides power (like type safety instead of using strings for methods, access to things like the reason phrase on the response). Also, HttpClient is fairly stable, and we are unlikely to switch the underlying library.
+* Retry logic (for failed requests)
+** HttpClient DefaultHttpRequestRetryHandler will retry on IOExceptions if the request is considered idempotent (is not a HttpEntityEnclosingRequest)
+** ServiceUnavailableRetryStrategy can be used for retries based on response code, and would be configured per-client
+** Using Apache’s retry mechanisms means per-client configuration, ultimately leaving the decision to retry up to the user. We lose the ability to retry on specific requests (token validation vs fetching groups, for example), but grant the user the ability to disable retrying if the impact is not desirable (longer response time, mostly).
+* Breaking (major version) change required?
+** Definitely so if we combine the Akka Http Client and Http Client services.
+
+Stories:
+
+* Upgrade HttpClient (using the new API, not the deprecated API)
+* Deprecate/remove the ServiceClient and ServiceClientResponse used by the Akka service
+* Add retry capabilities to the connection pool service
+* Combine the Akka Http Client service with Connection pool service (effectively, enrich the HttpClient with caching)
+* Stop backing the Akka Http Client Service with Akka
+** Rename the Akka Http Client Service to something like Shared Http Client Service (or Caching Http Client if more robust caching is built-in)
+** Just rewrite the whole thing (in Scala!) keeping this in mind
+
+Notes:
+
+* Both HttpConnectionPoolService and AkkaHttpClientService are configured by the same file
+* All the Akka service does is provide a shared, short, static cache and additional request timeouts (which should be redundant, as a timeout exists on the HttpClient connection itself)
+* Get rid of the Akka service client and provide a CachingHttpClient (a wrapper, perhaps?). This also lets us get rid of the ServiceClient and ServiceClientResponse.
+** Actually, we can’t. We need some optional shared cache, so a caching client doesn’t really work. Also, since the AkkaService works by key rather than client, the connection pool is not tied to the cache.
+** We do probably want to rename the Akka service as it describes the implementation, not the functionality.
+* Upgrading to the latest HttpClient should be trivial (only minor version releases), however, to stop using deprecated features will take more work
+* HttpRequestRetryHandler to handle retries? Nope, only kicks on IOException.
+* ServiceClient class 

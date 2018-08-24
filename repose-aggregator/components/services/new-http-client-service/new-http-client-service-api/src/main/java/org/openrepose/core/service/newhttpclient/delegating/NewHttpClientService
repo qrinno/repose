@@ -1,0 +1,11 @@
+package org.openrepose.core.service.newhttpclient.delegating;
+
+public interface NewHttpClientService {
+    NewHttpClient getDefaultClient();
+
+    NewHttpClient getClient(String clientId);
+
+    boolean isAvailable(String clientId);
+
+    void releaseClient(NewHttpClient httpClientContainer);
+}

@@ -1,0 +1,12 @@
+dependencies {
+    compile project(":repose-aggregator:components:services:new-http-client-service:new-http-client-service-api")
+    compile "org.scala-lang:scala-library"
+    compile "org.apache.httpcomponents:httpclient"
+    compile "org.slf4j:slf4j-api"
+    compile "org.slf4j:jcl-over-slf4j"
+    compile "org.springframework:spring-beans"
+    compile "io.opentracing:opentracing-api"
+    compile "com.google.guava:guava"
+
+    compileOnly "javax.inject:javax.inject"
+}

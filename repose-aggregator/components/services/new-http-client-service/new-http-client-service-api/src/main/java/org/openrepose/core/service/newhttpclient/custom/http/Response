@@ -1,0 +1,8 @@
+package org.openrepose.core.service.newhttpclient.custom.http;
+
+public interface Response {
+    // status code
+    // reason phrase
+    // headers (as a convenience object if we want to provide parameter parsing and quality support)
+    // body
+}

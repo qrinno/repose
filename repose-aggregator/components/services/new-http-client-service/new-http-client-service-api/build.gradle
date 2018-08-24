@@ -1,0 +1,4 @@
+// todo: drop this if we don't want to go the delegating client route
+dependencies {
+    compile "org.apache.httpcomponents:httpclient"
+}

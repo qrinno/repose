@@ -21,6 +21,9 @@ package org.openrepose.core.services.httpclient.impl;
 
 import io.opentracing.Tracer;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.http.pool.PoolStats;
 import org.openrepose.commons.config.manager.UpdateListener;
@@ -41,6 +44,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
