@@ -49,7 +49,7 @@ class HerpSimpleTest extends ReposeValveTest {
         MessageChain messageChain
 
         when:
-        messageChain = deproxy.makeRequest(url: reposeEndpoint, method: "GET", headers: ['Accept': 'application/xml'])
+        messageChain = deproxy.makeRequest(url: reposeEndpoint, path: "/?tenant_id=%21%40%23%24%25%5E%26Z%2A9%29", method: "GET", headers: ['Accept': 'application/xml'])
         String logLine = reposeLogSearch.searchByString("INFO  highly-efficient-record-processor")
         String jsonpart = logLine.substring(logLine.indexOf("{"))
         def slurper = new JsonSlurper()
